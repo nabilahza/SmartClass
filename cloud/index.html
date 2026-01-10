@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<!-- ===================== METADATA ===================== -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Classroom Dashboard</title>
+
+<!-- Chart.js library for charts (attendance & classroom usage) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Google Font for modern UI -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+
+<!-- ===================== STYLES ===================== -->
+
+<style>
+/* --- existing styles untouched --- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 30px 20px;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+  position: relative;
+}
+
+.header h1 {
+  color: white;
+  font-size: 3em;
+  font-weight: 800;
+  margin-bottom: 10px;
+  text-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  letter-spacing: -1px;
+}
+
+.header p {
+  color: rgba(255,255,255,0.9);
+  font-size: 1.1em;
+  font-weight: 300;
+}
+
+
+.status-badge {
+  position: fixed;
+  top: 30px;
+  right: 30px;
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.status-badge::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.attendance-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* table wider than chart */
+  gap: 30px;
+  align-items: stretch;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.connected {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.disconnected {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+
+.reconnect-btn {
+  position: fixed;
+  top: 80px;
+  right: 30px;
+  padding: 10px 20px;
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 1000;
+  display: none;
+  transition: all 0.3s ease;
+}
+
+.reconnect-btn:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.reconnect-btn:active {
+  transform: translateY(0);
+}
+
+.reconnect-btn.show {
+  display: block;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 25px;
+  margin-bottom: 40px;
+}
+
+.status-card {
+  background: white;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.status-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.status-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.status-card:hover::before {
+  transform: scaleX(1);
+}
+
+.status-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.status-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+}
+
+.status-card h3 {
+  color: #64748b;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+}
+
+.status-value {
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1;
+  margin-top: 10px;
+}
+
+.on { color: #10b981; }
+.off { color: #ef4444; }
+.locked { color: #ef4444; }
+.unlocked { color: #10b981; }
+.occupied { color: #f59e0b; }
+.idle { color: #94a3b8; }
+
+
+.section {
+  background: white;
+  border-radius: 20px;
+  padding: 35px;
+  margin-bottom: 30px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.section:hover {
+  box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.section-icon {
+  font-size: 32px;
+}
+
+.section-header h2 {
+  color: #1e293b;
+  font-size: 26px;
+  font-weight: 700;
+  flex: 1;
+}
+
+.section-count {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+th, td {
+  padding: 18px 20px;
+  text-align: left;
+}
+
+th {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #475569;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 1px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+th:first-child { border-radius: 12px 0 0 0; }
+th:last-child { border-radius: 0 12px 0 0; }
+td {
+  color: #334155;
+  font-size: 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr {
+  transition: all 0.2s ease;
+}
+
+tbody tr:hover {
+  background: #f8fafc;
+  transform: scale(1.01);
+}
+
+.student-name {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.uid-badge {
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  color: #667eea;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-family: 'Monaco', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.class-badge {
+  background: linear-gradient(135deg, #10b98115 0%, #05966915 100%);
+  color: #059669;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12px;
+  display: inline-block;
+}
+
+.status-allowed {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.time-badge {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.date-badge {
+  background: linear-gradient(135deg, #f59e0b15 0%, #f59e0b25 100%);
+  color: #f59e0b;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.no-data {
+  text-align: center;
+  padding: 60px 20px;
+  color: #94a3b8;
+  font-size: 16px;
+}
+
+.no-data::before {
+  content: '📭';
+  display: block;
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+.chart-wrapper {
+  padding: 20px;
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  border-radius: 15px;
+  margin-top: 10px;
+}
+
+canvas {
+  max-height: 350px !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.status-card, .section {
+  animation: fadeIn 0.5s ease backwards;
+}
+
+.status-card:nth-child(1) { animation-delay: 0.1s; }
+.status-card:nth-child(2) { animation-delay: 0.2s; }
+.status-card:nth-child(3) { animation-delay: 0.3s; }
+.status-card:nth-child(4) { animation-delay: 0.4s; }
+
+
+@media (max-width: 768px) {
+  .header h1 { font-size: 2em; }
+  .status-grid { grid-template-columns: 1fr; }
+  .section { padding: 25px; }
+  th, td { padding: 12px; }
+  .status-badge { top: 15px; right: 15px; }
+  .reconnect-btn { top: 65px; right: 15px; }
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-select {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid #c7d2fe;
+  font-weight: 600;
+  color: #4338ca;
+  background: #eef2ff;
+}
+
+.filter-btn {
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: none;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filter-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(102,126,234,0.4);
+}
+
+
+</style>
+</head>
+
+<body>
+
+<!-- ===================== CONNECTION STATUS ===================== -->
+<!-- Shows whether Flask backend is reachable -->
+<div class="status-badge disconnected" id="status">⚫ Disconnected</div>
+<!-- Button to manually retry connection if backend is down -->
+<button class="reconnect-btn" id="reconnectBtn" onclick="manualReconnect()">🔄 Reconnect</button>
+
+
+<!-- ===================== PAGE CONTAINER ===================== -->
+<div class="container">
+  <div class="header">
+    <h1>🏫 SmartClass</h1>
+    <p>Smart Classroom Monitoring and Attendance System</p>
+  </div>
+   
+  <!-- ===================== REAL-TIME STATUS CARDS ===================== -->
+  <div class="status-grid">
+    <!-- Classroom occupancy -->
+    <div class="status-card">
+      <div class="status-card-header">
+        <div class="status-icon" style="background: #fef3c7;">
+          <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
+            <rect x="12" y="8" width="40" height="22" rx="1" fill="#2d3748" stroke="#1a202c" stroke-width="2"/>
+            <line x1="16" y1="18" x2="24" y2="18" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/>
+            <rect x="8" y="34" width="22" height="3" rx="1" fill="#8b5cf6"/>
+            <rect x="34" y="34" width="22" height="3" rx="1" fill="#8b5cf6"/>
+            <rect x="10" y="37" width="2" height="12" rx="0.5" fill="#6d28d9"/>
+            <rect x="26" y="37" width="2" height="12" rx="0.5" fill="#6d28d9"/>
+            <rect x="36" y="37" width="2" height="12" rx="0.5" fill="#6d28d9"/>
+            <rect x="52" y="37" width="2" height="12" rx="0.5" fill="#6d28d9"/>
+            <rect x="12" y="46" width="2" height="8" rx="0.5" fill="#6d28d9"/>
+            <rect x="24" y="46" width="2" height="8" rx="0.5" fill="#6d28d9"/>
+            <rect x="13" y="50" width="12" height="2" rx="0.5" fill="#8b5cf6"/>
+            <line x1="13" y1="52" x2="11" y2="56" stroke="#6d28d9" stroke-width="2" stroke-linecap="round"/>
+            <line x1="25" y1="52" x2="27" y2="56" stroke="#6d28d9" stroke-width="2" stroke-linecap="round"/>
+            <rect x="38" y="46" width="2" height="8" rx="0.5" fill="#6d28d9"/>
+            <rect x="50" y="46" width="2" height="8" rx="0.5" fill="#6d28d9"/>
+            <rect x="39" y="50" width="12" height="2" rx="0.5" fill="#8b5cf6"/>
+            <line x1="39" y1="52" x2="37" y2="56" stroke="#6d28d9" stroke-width="2" stroke-linecap="round"/>
+            <line x1="51" y1="52" x2="53" y2="56" stroke="#6d28d9" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3>Classroom Status</h3>
+      </div>
+      <div class="status-value idle" id="classStatus">Idle</div>
+    </div>
+
+    <!-- Lighting status -->
+    <div class="status-card">
+      <div class="status-card-header">
+        <div class="status-icon">💡</div>
+        <h3>Lighting</h3>
+      </div>
+      <div class="status-value off" id="lights">OFF</div>
+    </div>
+
+    <!-- Fan status -->
+    <div class="status-card">
+      <div class="status-card-header">
+        <div class="status-icon" style="background: #e0e7ff;">
+          <svg width="28" height="28" viewBox="0 0 100 100" fill="none">
+            <circle cx="50" cy="50" r="45" stroke="#667eea" stroke-width="4" fill="none"/>
+            <circle cx="50" cy="50" r="10" fill="#667eea"/>
+            <path d="M50 50 Q 35 25, 30 15 Q 40 20, 50 30 Q 48 40, 50 50 Z" fill="#667eea"/>
+            <path d="M50 50 Q 75 35, 85 30 Q 80 40, 70 50 Q 60 48, 50 50 Z" fill="#667eea"/>
+            <path d="M50 50 Q 65 75, 70 85 Q 60 80, 50 70 Q 52 60, 50 50 Z" fill="#667eea"/>
+            <path d="M50 50 Q 25 65, 15 70 Q 20 60, 30 50 Q 40 52, 50 50 Z" fill="#667eea"/>
+          </svg>
+        </div>
+        <h3>Fan</h3>
+      </div>
+      <div class="status-value off" id="fanStatus">OFF</div>
+    </div>
+
+    <!-- Door lock status -->
+    <div class="status-card">
+      <div class="status-card-header">
+        <div class="status-icon">🔐</div>
+        <h3>Door Lock</h3>
+      </div>
+      <div class="status-value locked" id="door">Locked</div>
+    </div>
+
+    <!-- Current class (based on RTC schedule) -->
+    <div class="status-card">
+      <div class="status-card-header">
+        <div class="status-icon">📚</div>
+        <h3>Current Class</h3>
+      </div>
+    <div class="status-value" id="currentClass">-</div>
+</div>
+
+  </div>
+
+<!-- ===================== ATTENDANCE + CHART ===================== -->
+<div class="attendance-row">
+
+  <!-- Attendance table -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">✅</span>
+      <h2>Today's Attendance</h2>
+
+      <!-- Class filter dropdown -->
+      <div class="filter-group">
+        <select id="classFilter" class="filter-select">
+          <option value="">All Classes</option>
+          <option value="CS101">CS101</option>
+          <option value="CS301">CS301</option>
+          <option value="CS203">CS203</option>
+          <option value="CS411">CS411</option>
+        </select>
+        <button class="filter-btn" onclick="applyClassFilter()">Filter</button>
+      </div>
+
+      <span class="section-count" id="attendanceCount">0</span>
+    </div>
+
+    <!-- Attendance table -->
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Student Name</th>
+            <th>Matric ID</th>
+            <th>Class ID</th>
+          </tr>
+        </thead>
+        <tbody id="attendanceTable">
+          <tr><td colspan="6" class="no-data">Waiting for attendance data...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+    <!-- Attendance percentage bar chart -->
+    <div class="section">
+        <div class="section-header">
+        <span class="section-icon">📊</span>
+        <h2>Today's Attendance Percentage</h2>
+        </div>
+        <div class="chart-wrapper">
+        <canvas id="chart"></canvas>
+        </div>
+    </div>
+    
+    <!-- ===================== ACCESS LOG ===================== -->
+    <div class="section">
+    <div class="section-header">
+      <span class="section-icon">🚪</span>
+      <h2>Today's Access Log</h2>
+      <span class="section-count" id="accessCount">0</span>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Student Name</th>
+            <th>Matric ID</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="accessTable">
+          <tr><td colspan="6" class="no-data">Waiting for access logs...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+    <!-- ===================== CLASSROOM USAGE ===================== -->
+    <div class="section">
+    <div class="section-header">
+        <span class="section-icon">🏫</span>
+        <h2>Today's Classroom Usage</h2>
+    </div>
+    <div class="chart-wrapper">
+        <canvas id="usageChart"></canvas>
+        <p id="usageLabel" style="
+            text-align:center;
+            margin-top:12px;
+            font-weight:600;
+            color:#475569;
+        ">
+        -
+    </p>
+    </div>
+    </div>
+
+
+</div>
+
+<!-- ===================== JAVASCRIPT ===================== -->
+<script>
+/*
+This script:
+1. Fetches real-time data from Flask (/data)
+2. Updates UI every 2 seconds
+3. Draws charts using Chart.js
+4. Shows live classroom status
+*/
+
+// Attendance Chart
+const chart = new Chart(document.getElementById('chart'), {
+  type: 'bar',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Students Present',
+      data: [],
+      backgroundColor: 'rgba(102, 126, 234, 0.8)',
+      borderColor: 'rgba(102, 126, 234, 1)',
+      borderWidth: 2,
+      borderRadius: 8,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        display: false
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        cornerRadius: 8,
+        titleFont: { size: 14, weight: 'bold' },
+        bodyFont: { size: 13 }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1,
+          font: { size: 12, weight: '500' }
+        },
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)'
+        }
+      },
+      x: {
+        ticks: {
+          font: { size: 12, weight: '600' }
+        },
+        grid: {
+          display: false
+        }
+      }
+    }
+  }
+});
+
+/*NEW: Classroom Usage Pie Chart */
+const usageChart = new Chart(document.getElementById('usageChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Occupied', 'Idle'],
+    datasets: [{
+      data: [0, 0],
+      backgroundColor: [
+        'rgba(245, 158, 11, 0.85)', // orange
+        'rgba(148, 163, 184, 0.6)' // gray
+      ],
+      borderWidth: 0
+    }]
+  },
+  options: {
+    cutout: '65%',
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          font: { size: 13, weight: '600' }
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => `${ctx.label}: ${ctx.raw}%`
+        }
+      }
+    }
+  }
+});
+
+
+// Update connection status
+function updateConnectionStatus(connected) {
+  const statusBadge = document.getElementById('status');
+  const reconnectBtn = document.getElementById('reconnectBtn');
+ 
+  if (connected) {
+    statusBadge.className = 'status-badge connected';
+    statusBadge.innerHTML = '🟢 Connected';
+    reconnectBtn.classList.remove('show');
+  } else {
+    statusBadge.className = 'status-badge disconnected';
+    statusBadge.innerHTML = '⚫ Disconnected';
+    reconnectBtn.classList.add('show');
+  }
+}
+
+// Manual reconnect function
+function manualReconnect() {
+  const reconnectBtn = document.getElementById('reconnectBtn');
+  reconnectBtn.textContent = '🔄 Connecting...';
+  reconnectBtn.disabled = true;
+ 
+  fetchData().then(() => {
+    setTimeout(() => {
+      reconnectBtn.textContent = '🔄 Reconnect';
+      reconnectBtn.disabled = false;
+    }, 1000);
+  });
+}
+
+/* Fetch data from Flask */
+async function fetchData() {
+  try {
+    const res = await fetch('/data');
+    if (!res.ok) throw new Error('Fetch failed');
+   
+    const data = await res.json();
+    updateConnectionStatus(true);
+    updateUI(data);
+  } catch (err) {
+    console.error('Error:', err);
+    updateConnectionStatus(false);
+  }
+}
+
+// attendance filter state
+let fullAttendanceList = [];
+let selectedClass = "";
+
+// apply filter
+function applyClassFilter() {
+  selectedClass = document.getElementById('classFilter').value;
+  renderAttendanceTable(fullAttendanceList);
+}
+
+function timeToMinutes(t) {
+  if (!t) return 0;
+  const [h, m] = t.split(':').map(Number);
+  return (h * 60) + (m || 0);
+}
+
+//  render table helper
+function renderAttendanceTable(list) {
+  const table = document.getElementById('attendanceTable');
+
+  // sort latest date + time first
+  const sorted = [...list].sort((a, b) =>
+    timeToMinutes(b.timestamp) - timeToMinutes(a.timestamp)
+  );
+
+  const filtered = selectedClass
+    ? sorted.filter(a => a.classID === selectedClass)
+    : sorted;
+
+  document.getElementById('attendanceCount').textContent = filtered.length;
+
+  if (filtered.length === 0) {
+    table.innerHTML = '<tr><td colspan="6" class="no-data">No attendance records</td></tr>';
+    return;
+  }
+
+  table.innerHTML = filtered.map(a => `
+    <tr>
+      <td><span class="date-badge">${a.date || 'N/A'}</span></td>
+      <td class="time-badge">${a.timestamp || 'N/A'}</td>
+      <td class="student-name">${a.studentName || 'Unknown'}</td>
+      <td><span class="uid-badge">${a.matricid || 'N/A'}</span></td>
+      <td><span class="class-badge">${a.classID || 'Unknown'}</span></td>
+    </tr>
+  `).join('');
+}
+
+/* Main UI update */
+function updateUI(data) {
+
+  const sys = data.system?.system || {};
+  const env = data.system?.environment || {};
+  const systemActive = sys.systemActive === 1 || sys.systemActive === true;
+
+  // Classroom Usage Chart (FROM BACKEND)
+  const usage = data.usage || {};
+  const occupied = usage.occupiedMinutes || 0;
+  const idle = usage.idleMinutes || 0;
+  const total = occupied + idle || 1;
+    
+  usageChart.data.datasets[0].data = [
+  Math.round((occupied / total) * 100),
+  Math.round((idle / total) * 100)
+  ];
+
+  if (total === 1 && occupied === 0 && idle === 0) {
+    document.getElementById("usageLabel").textContent =
+        "No usage data recorded today";
+    } else {
+    const utilization = (occupied / total) * 100;
+    const usageLabel = utilization < 40
+        ? "Under-utilized today"
+        : "Well utilized today";
+
+  document.getElementById("usageLabel").textContent =
+    `${usageLabel} (${Math.round(utilization)}%)`;
+  }
+
+  usageChart.update();
+
+  // Status cards
+  const fanStatus = document.getElementById('fanStatus');
+  fanStatus.textContent = sys.fan ? 'ON' : 'OFF';
+  fanStatus.className = sys.fan ? 'status-value on' : 'status-value off';
+
+  const lights = document.getElementById('lights');
+  lights.textContent = (sys.led1 || sys.led2) ? 'ON' : 'OFF';
+  lights.className = (sys.led1 || sys.led2) ? 'status-value on' : 'status-value off';
+
+  const door = document.getElementById('door');
+  door.textContent = sys.doorLocked ? 'Locked' : 'Unlocked';
+  door.className = sys.doorLocked ? 'status-value locked' : 'status-value unlocked';
+
+  const classStatus = document.getElementById('classStatus');
+  classStatus.textContent = systemActive ? 'Occupied' : 'Idle';
+  classStatus.className = systemActive ? 'status-value occupied' : 'status-value idle';
+
+  const currentClass = document.getElementById('currentClass');
+  currentClass.textContent = data.currentClass || '-';
+
+  // save full attendance list
+  fullAttendanceList = data.attendance || [];
+
+  // render attendance with filter
+  renderAttendanceTable(fullAttendanceList);
+
+  const summary = data.attendanceSummary || {};
+  chart.data.labels = Object.keys(summary);
+  chart.data.datasets[0].data = Object.values(summary).map(v =>
+    Math.round((v / 30) * 100)
+  );
+  chart.data.datasets[0].label = "Attendance %";
+  chart.update();
+
+  //Access log with DATE column
+  const accessTable = document.getElementById('accessTable');
+  if (data.access && data.access.length > 0) {
+    const sortedAccess = [...data.access].sort((a, b) =>
+        timeToMinutes(b.timestamp) - timeToMinutes(a.timestamp)
+    );
+
+    document.getElementById('accessCount').textContent = data.access.length;
+    
+
+    accessTable.innerHTML = sortedAccess.map(a => `<tr>
+      <td><span class="date-badge">${a.date || 'N/A'}</span></td>
+      <td class="time-badge">${a.timestamp || 'N/A'}</td>
+      <td class="student-name">${a.studentName || 'Unknown'}</td>
+      <td><span class="uid-badge">${a.matricid || 'N/A'}</span></td>
+      <td class="status-allowed">${a.result || 'Unknown'}</td>
+    </tr>`).join('');
+  } else {
+    document.getElementById('accessCount').textContent = '0';
+    accessTable.innerHTML = '<tr><td colspan="5" class="no-data">No access logs yet</td></tr>';
+  }
+}
+
+// Poll backend every 2 seconds
+fetchData();
+setInterval(fetchData, 2000);
+</script>
+
+</body>
+</html>
