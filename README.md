@@ -4,7 +4,7 @@ CPC357 IOT ARCHITECTURE AND SMART APPLICATIONS (PROJECT)
 ---
 
 ## Project Description
-**SmartClass** is a functional IoT system for smart classrooms that integrates RFID-based attendance, automated door access, PIR motion detection, and real-time data visualization through a web dashboard. The system mainly uses Maker Feather AIoT S3, HiveMQ and Google Cloud Platform to demonstrate IoT architecture, cloud integration, and data-driven decision-making, which contributing to which contributes to the United Nations Sustainable Development Goal (SDG) 11 – Sustainable Cities and Communities.
+**SmartClass** is a functional IoT system for smart classrooms that integrates RFID-based attendance and door access, PIR motion detection, and real-time data visualization through a web dashboard. The system mainly uses Maker Feather AIoT S3, HiveMQ and Google Cloud Platform to demonstrate IoT architecture, cloud integration, and data-driven decision-making, which contributing to which contributes to the United Nations Sustainable Development Goal (SDG) 11 – Sustainable Cities and Communities.
 
 ---
 ## Project Objectives
