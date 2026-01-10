@@ -101,6 +101,7 @@ CPC357 IOT ARCHITECTURE AND SMART APPLICATIONS (PROJECT)
 
 ---
 ## Repository Structure
+```
 SmartClass/
 ├── firmware/
 │   └── smartclass.ino          # Maker Feather AIoT S3 firmware
@@ -117,7 +118,7 @@ SmartClass/
 │   └── access_logs.png/
 │
 └── README.md
-
+```
 ---
 ## Sustainable Development Goals (SDG) Alignment
 This project supports SDG 11: Sustainable Cities and Communities specifically on targets 11.1 and 11.6 through efficient use of resources, enhancing safety and security within urban learning environments. 
