@@ -1,4 +1,4 @@
-# SmartClass (IoT Based Smart Classroom)
+# SmartClass (Smart Classroom Monitoring and Attendance System)
 CPC357 IOT ARCHITECTURE AND SMART APPLICATIONS (PROJECT)
 
 ---
