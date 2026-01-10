@@ -1,69 +1,39 @@
 # SmartClass (IoT Based Smart Classroom)
+CPC357 IOT ARCHITECTURE AND SMART APPLICATIONS (PROJECT)
+
+---
 
 ## Project Description
-The **SmartClass** is functional IoT system for smart classrooms that integrates RFID-based attendance, automated door access, PIR motion detection, and real-time data visualization through a web dashboard. The system mainly uses Maker Feather AIoT S3, HiveMQ and Google Cloud Platform to demonstrates IoT architecture, cloud integration, and data-driven decision-making, which contributing to UN Sustainable Development Goal (SDG) 11 – Sustainable Cities and Communities.
+**SmartClass** is a functional IoT system for smart classrooms that integrates RFID-based attendance, automated door access, PIR motion detection, and real-time data visualization through a web dashboard. The system mainly uses Maker Feather AIoT S3, HiveMQ and Google Cloud Platform to demonstrate IoT architecture, cloud integration, and data-driven decision-making, which contributing to which contributes to the United Nations Sustainable Development Goal (SDG) 11 – Sustainable Cities and Communities.
 
 ---
-## Key Features 
-- **Automated Occupancy-Based Environment Control**: Automatic fan and lighting control based on classroom occupancy.
-- **RFID-Based Smart Attendance and Access Control**: Automatically records student attendance during scheduled class hours while restricting classroom access outside     permitted operating times.
-- **Real-Time and Historical Classroom Monitoring Dashboard**: Displays live classroom status along with historical attendance and access logs for monitoring classroom    usage.
+## Project Objectives
+- To develop a functional Smart Classroom system using IoT technology to enhance safety, energy efficiency, and automation in urban learning environments.
+- To integrate real-time sensor data with cloud services for centralized data processing, storage, and analytics.
+- To develop a web-based dashboard that visualizes real-time classroom status, attendance statistics and access log to support monitoring and analysis of classroom usage.
   
 ---
-## Prerequisites
-Ensure the following libraries and tools are installed:
 
-## Software Requirements
-- Arduino IDE
-  - Go to the Sketch → Include Library → Manage Libraries
-  - Install these libraries:
-    - PubSubClient by Nick O'Leary
-    - LiquidCrystal_I2C by Martin
-    - RTCLib by Adafruit
-    - MFRC522 by GithubCommunity
-  - Go to the Tools → Boards → Boards Manager
-    - Install esp32 by Espressif Systems
-   
-- HiveMQ Cloud
-  - Sign in to HiveMQ Cloud and create a new MQTT broker instance
-  - Go to Access Management → Credentials and configure the following parameters:
-    - Username: smartclassroom
-    - Password: 12345Smartclassroom
-    - Permission: Publish and Subscribe 
-  Note: Use HiveMQ’s web client can be used to test message flow
+## Key Functionalities of the System
+- **RFID-Based Controlled Access**  
+  Students enter the classroom using RFID student cards during allowed hours to prevent unauthorized access.
 
-- Google Cloud Platfrom (GCP)
-  - Sign in to Google Cloud Console and create a new project, e.g., SmartClassroomIoT
-  - Enable the following APIs: Cloud Run, Cloud Build, and Firestore
-  - Set up Firestore Database by creating collections: students, attendance, access_logs
-  - Create a Service Account for the project:
-    - Go to IAM & Admin → Service Accounts → Create Service Account
-    - Assign the role Cloud Datastore User
-    - Create a JSON key and download it as service-account.json
-  - In Cloud Run, create a new service with the following configuration:
-    - Service name: smart-dashboard
-    - Region: asia-southeast1 (Singapore)
-    - Runtime: Python 3.14
-    - Authentication: Allow public access
-    - Billing request: Request-based
-    - Service scaling: Auto-scaling
-    - Ingress: All
-  - Upload the source code to the service, including:
-    - app.py
-    - requirements.txt
-    - service-account.json
-    - templates / index.html
-  - Save and redeploy the service
-  - Open the Cloud Run URL to access the dashboard
-  - Check Firestore collections to confirm that data from HiveMQ is being received and stored correctly
-    
-## Software Requirements
+- **RFID-Based Attendance**  
+  Student attendance is automatically recorded when RFID cards are scanned during class sessions, with duplicate prevention for accuracy.
+
+- **Smart Energy Management**  
+  A PIR motion sensor controls lights and fans based on classroom occupancy to reduce unnecessary energy usage.
+  
+---
+## System Requirements
+
+### Hardware Requirements
 - Maker Feather AIoT S3 Microcontroller
 - PIR Sensor
-- RFID-RC522 Sensor
+- RFID-RC522 Module
 - Push Button
 - Solenoid Door Lock 
-- White LEDs
+- White LEDs (x2)
 - Shaft motor with propeller 
 - 1602 LCD Display (Visual Output)
 - 5V USB 
@@ -71,16 +41,84 @@ Ensure the following libraries and tools are installed:
 - Jumper Wires
 - Optocoupler Relay (x2)
 - DS3231 Real Time Clock (RTC) Module
-- Resistor 
-- 3x18650 Battery Holder
+- Resistor (x3)
 
 ---
-## Setup Guide
-**1. Hardware Setup**
-[insert diagram]
 
-**2. Software Setup**
-Download this repository into zip file or copy the coding into the Arduino IDE (tak complete lagi)
+### Software Requirements
+
+#### Arduino
+- Arduino IDE  
+- Required libraries:
+  - PubSubClient (Nick O’Leary)  
+  - LiquidCrystal_I2C  
+  - RTCLib (Adafruit)  
+  - MFRC522  
+- ESP32 board package (Espressif Systems)
+
+---
+
+### Cloud Services
+
+#### HiveMQ Cloud
+- Create a HiveMQ Cloud MQTT broker  
+- Create credentials with **Publish & Subscribe** permission  
+
+#### Google Cloud Platform (GCP)
+- Create a new project  
+- Enable:
+  - Firestore  
+  - Cloud Run  
+  - Cloud Build  
+- Create Firestore collections:
+  - `students`
+  - `attendance`
+  - `access_logs`
+  - `classroom_usage`
+- Create a Service Account:
+  - Role: **Cloud Datastore User**
+  - Download JSON key  
+---
+## Setup Guide
+1. **Hardware Setup**  
+   Connect the RFID reader, PIR sensor, relay, LEDs, fan, RTC, and LCD to the ESP32 according to the pin configuration in `smartclass.ino`.
+
+2. **Firmware**  
+   Upload `firmware/smartclass.ino` to the Maker Feather AIoT S3 using Arduino IDE.
+
+3. **Cloud Backend**  
+   Deploy the Flask backend to Google Cloud Run by uploading the following files:
+   - `cloud/app.py`
+   - `cloud/requirements.txt`
+   - `cloud/templates/index.html`
+
+   Place your Google Cloud service account key at:
+   cloud/service-account.json  
+   (This file is not included in the repository for security reasons)
+
+4. **Dashboard**  
+   Access the web dashboard via the Cloud Run URL.
+
+
+---
+## Repository Structure
+SmartClass/
+│
+├── firmware/
+│   └── smartclass.ino        # ESP32 firmware
+│
+├── cloud/
+│   ├── app.py                # Flask backend (MQTT, Firestore, API)
+│   ├── requirements.txt      # Python dependencies
+│   ├── templates/
+│   │   └── index.html        # Web dashboard
+│   └── service-account.json  # (NOT in GitHub for security reason) Google Cloud key
+│
+├── Screenshot/                # System screenshots for documentation            
+│   │   └── access_log.png        
+│   │   └── attendance.png        
+│
+└── README.md
 
 ---
 ## Sustainable Development Goals (SDG) Alignment
