@@ -102,20 +102,19 @@ CPC357 IOT ARCHITECTURE AND SMART APPLICATIONS (PROJECT)
 ---
 ## Repository Structure
 SmartClass/
-│
 ├── firmware/
-│   └── smartclass.ino        # ESP32 firmware
+│   └── smartclass.ino          # Maker Feather AIoT S3 firmware
 │
 ├── cloud/
-│   ├── app.py                # Flask backend (MQTT, Firestore, API)
-│   ├── requirements.txt      # Python dependencies
+│   ├── app.py                  # Flask backend (MQTT, Firestore, REST API)
+│   ├── requirements.txt        # Python dependencies
 │   ├── templates/
-│   │   └── index.html        # Web dashboard
-│   └── service-account.json  # (NOT in GitHub for security reason) Google Cloud key
+│   │   └── index.html          # Web dashboard UI
+│   └── service-account.json    # NOT in GitHub for security purpose (Google Cloud credentials)
 │
-├── Screenshot/                # System screenshots for documentation            
-│   │   └── access_log.png        
-│   │   └── attendance.png        
+├── screenshot/                 # System screenshots for documentation
+│   └── attendance.png/
+│   └── access_logs.png/
 │
 └── README.md
 
