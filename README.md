@@ -81,8 +81,7 @@ CPC357 IOT ARCHITECTURE AND SMART APPLICATIONS (PROJECT)
 ---
 ## Setup Guide
 1. **Hardware Setup**  
-   Connect the RFID reader, PIR sensor, relay, LEDs, fan, RTC, and LCD to the ESP32 according to the pin configuration in `smartclass.ino`.
-
+   Connect the RFID reader, PIR sensor, relay, LEDs, fan, RTC, and LCD to the Maker Feather AIoT S3 and ensure proper power supply for Maker Feather AIoT S3 and     solenoid.
 2. **Firmware**  
    Upload `firmware/smartclass.ino` to the Maker Feather AIoT S3 using Arduino IDE.
 
