@@ -39,6 +39,7 @@ CPC357 IOT ARCHITECTURE AND SMART APPLICATIONS (PROJECT)
 - 5V USB 
 - 3.7V 1100mAh Li-Ion Battery (x3)
 - Jumper Wires
+- Qwiic Cables
 - Optocoupler Relay (x2)
 - DS3231 Real Time Clock (RTC) Module
 - Resistor (x3)
